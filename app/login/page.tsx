@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -9,47 +10,74 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isRegister, setIsRegister] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  function register() {
+  async function register() {
     if (!email || !password) {
       alert("请输入邮箱和密码")
       return
     }
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
+    setLoading(true)
+
+    const { data: oldUser } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .single()
+
+    if (oldUser) {
+      alert("这个邮箱已经注册过了")
+      setLoading(false)
+      return
+    }
+
+    const { error } = await supabase.from("users").insert([
+      {
         email,
         password,
-      })
-    )
+      },
+    ])
+
+    setLoading(false)
+
+    if (error) {
+      alert("注册失败：" + error.message)
+      return
+    }
 
     alert("注册成功，请登录")
-
     setIsRegister(false)
     setEmail("")
     setPassword("")
   }
 
-  function login() {
-    const user = localStorage.getItem("user")
-
-    if (!user) {
-      alert("请先注册账号")
+  async function login() {
+    if (!email || !password) {
+      alert("请输入邮箱和密码")
       return
     }
 
-    const data = JSON.parse(user)
+    setLoading(true)
 
-    if (
-      data.email === email &&
-      data.password === password
-    ) {
-      localStorage.setItem("isLogin", "true")
-      router.push("/")
-    } else {
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .eq("password", password)
+      .single()
+
+    setLoading(false)
+
+    if (error || !data) {
       alert("邮箱或密码错误")
+      return
     }
+
+    localStorage.setItem("isLogin", "true")
+    localStorage.setItem("userEmail", email)
+
+    router.push("/")
   }
 
   return (
@@ -79,9 +107,10 @@ export default function LoginPage() {
           <>
             <button
               onClick={register}
-              className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-bold"
+              disabled={loading}
+              className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-bold disabled:opacity-50"
             >
-              确认注册
+              {loading ? "注册中..." : "确认注册"}
             </button>
 
             <button
@@ -95,9 +124,10 @@ export default function LoginPage() {
           <>
             <button
               onClick={login}
-              className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-bold"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-bold disabled:opacity-50"
             >
-              登录
+              {loading ? "登录中..." : "登录"}
             </button>
 
             <button
