@@ -7,16 +7,30 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false)
   const [image, setImage] = useState("")
   const [preview, setPreview] = useState("")
+  const [fileBase64, setFileBase64] = useState("")
 
   function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+
     setPreview(URL.createObjectURL(file))
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setFileBase64(reader.result as string)
+    }
+    reader.readAsDataURL(file)
   }
 
   async function generateImage() {
+    if (!fileBase64) {
+      alert("请先上传产品图片")
+      return
+    }
+
     try {
       setLoading(true)
+      setImage("")
 
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -25,6 +39,7 @@ export default function HomePage() {
         },
         body: JSON.stringify({
           style,
+          image: fileBase64,
         }),
       })
 
@@ -67,7 +82,7 @@ export default function HomePage() {
               <img
                 src={preview}
                 alt=""
-                className="mx-auto max-h-72 rounded-xl"
+                className="mx-auto max-h-72 rounded-xl bg-white"
               />
             ) : (
               <span className="text-slate-400">
@@ -106,9 +121,9 @@ export default function HomePage() {
           <button
             onClick={generateImage}
             disabled={loading}
-            className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl font-bold"
+            className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl font-bold disabled:opacity-50"
           >
-            {loading ? "AI生成中..." : "开始AI生成"}
+            {loading ? "AI换背景中..." : "开始AI换背景"}
           </button>
         </div>
 
@@ -121,8 +136,16 @@ export default function HomePage() {
             <img
               src={image}
               alt=""
-              className="rounded-2xl w-full max-w-xl"
+              className="rounded-2xl w-full max-w-xl bg-white"
             />
+
+            <a
+              href={image}
+              target="_blank"
+              className="inline-block mt-4 bg-blue-600 px-5 py-3 rounded-xl font-bold"
+            >
+              打开/下载图片
+            </a>
           </div>
         )}
       </div>
