@@ -14,18 +14,19 @@ export async function POST(req: Request) {
         },
 
         body: JSON.stringify({
-          model: "black-forest-labs/FLUX.1-schnell",
+          model: "stabilityai/stable-diffusion-xl-base-1.0",
 
-          prompt: `生成一张1:1电商主图，
+          prompt: `一张高端电商产品主图，
           ${style}风格，
-          高端商品摄影，
-          干净背景，
-          商业质感，
+          白色背景，
+          商业摄影，
+          高级感，
+          产品居中，
+          光影真实，
           不要文字，
           不要水印`,
 
           image_size: "1024x1024",
-          batch_size: 1,
         }),
       }
     )
@@ -38,6 +39,7 @@ export async function POST(req: Request) {
           data.message ||
           data.error ||
           "AI生成失败",
+        raw: data,
       })
     }
 
@@ -45,13 +47,6 @@ export async function POST(req: Request) {
       data.images?.[0]?.url ||
       data.data?.[0]?.url ||
       ""
-
-    if (!image) {
-      return NextResponse.json({
-        error: "没有返回图片",
-        raw: data,
-      })
-    }
 
     return NextResponse.json({
       image,
