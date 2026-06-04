@@ -5,7 +5,7 @@ export async function POST(req: Request) {
     const { style } = await req.json()
 
     const response = await fetch(
-      "https://api.siliconflow.cn/v1/images/generations",
+      "https://api.siliconflow.cn/v1/images/generations", 
       {
         method: "POST",
         headers: {
