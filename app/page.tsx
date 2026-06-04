@@ -6,6 +6,13 @@ export default function HomePage() {
   const [style, setStyle] = useState("现代简约")
   const [loading, setLoading] = useState(false)
   const [image, setImage] = useState("")
+  const [preview, setPreview] = useState("")
+
+  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setPreview(URL.createObjectURL(file))
+  }
 
   async function generateImage() {
     try {
@@ -38,15 +45,38 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-6">
-      <div className="max-w-5xl mx-auto">
-
+      <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">
           AI电商主图生成平台
         </h1>
 
         <div className="bg-slate-900 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-4">
+            上传产品图片
+          </h2>
 
-          <h2 className="text-xl mb-4">
+          <label className="block border-2 border-dashed border-slate-600 rounded-2xl p-10 text-center cursor-pointer mb-6">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleUpload}
+              className="hidden"
+            />
+
+            {preview ? (
+              <img
+                src={preview}
+                alt=""
+                className="mx-auto max-h-72 rounded-xl"
+              />
+            ) : (
+              <span className="text-slate-400">
+                点击上传产品图片
+              </span>
+            )}
+          </label>
+
+          <h2 className="text-xl font-bold mb-4">
             选择场景风格
           </h2>
 
@@ -80,7 +110,6 @@ export default function HomePage() {
           >
             {loading ? "AI生成中..." : "开始AI生成"}
           </button>
-
         </div>
 
         {image && (
@@ -96,7 +125,6 @@ export default function HomePage() {
             />
           </div>
         )}
-
       </div>
     </div>
   )
