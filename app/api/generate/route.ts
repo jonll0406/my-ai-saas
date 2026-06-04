@@ -14,7 +14,7 @@ export async function POST(req: Request) {
         },
 
         body: JSON.stringify({
-          model: "Kolors",
+       model: "Kwai-Kolors/Kolors",
 
           prompt: `生成一张高端电商产品主图，
           ${style}风格，
