@@ -2,32 +2,27 @@ import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
   try {
-    const { style } = await req.json()
+    const { style, image } = await req.json()
+
+    if (!image) {
+      return NextResponse.json({
+        error: "请先上传产品图片",
+      })
+    }
 
     const response = await fetch(
-      "https://api.siliconflow.cn/v1/images/generations", 
+      "https://api.siliconflow.cn/v1/images/generations",
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
-       model: "Kwai-Kolors/Kolors",
-
-          prompt: `生成一张高端电商产品主图，
-          ${style}风格，
-          白色背景，
-          商业摄影，
-          高级感，
-          产品居中，
-          光影真实，
-          不要文字，
-          不要水印`,
-
+          model: "Qwen-Image-Edit",
+          prompt: `根据上传的产品图生成一张1:1中国电商主图，保留产品主体和外观，${style}风格，高级商品摄影，干净背景，真实光影，商业质感，适合淘宝京东拼多多，不要文字，不要水印`,
+          image,
           image_size: "1024x1024",
-          batch_size: 1,
         }),
       }
     )
@@ -36,20 +31,17 @@ export async function POST(req: Request) {
 
     if (!response.ok) {
       return NextResponse.json({
-        error:
-          data.message ||
-          data.error ||
-          "AI生成失败",
+        error: data.message || data.error || "AI生成失败",
         raw: data,
       })
     }
 
-    const image =
+    const resultImage =
       data.images?.[0]?.url ||
       data.data?.[0]?.url ||
       ""
 
-    if (!image) {
+    if (!resultImage) {
       return NextResponse.json({
         error: "没有返回图片",
         raw: data,
@@ -57,9 +49,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({
-      image,
+      image: resultImage,
     })
-
   } catch (error) {
     return NextResponse.json({
       error: "服务器错误",
