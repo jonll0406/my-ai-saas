@@ -14,14 +14,29 @@ export async function POST(req: Request) {
       "https://api.siliconflow.cn/v1/images/generations",
       {
         method: "POST",
+
         headers: {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
           "Content-Type": "application/json",
         },
+
         body: JSON.stringify({
-          model: "Qwen-Image-Edit",
-          prompt: `根据上传的产品图生成一张1:1中国电商主图，保留产品主体和外观，${style}风格，高级商品摄影，干净背景，真实光影，商业质感，适合淘宝京东拼多多，不要文字，不要水印`,
-          image,
+          model: "Qwen/Qwen-Image",
+
+          prompt: `
+根据上传的产品图生成中国电商主图，
+保留产品主体，
+${style}风格，
+高级商品摄影，
+商业质感，
+真实光影，
+适合淘宝京东，
+不要文字，
+不要水印
+`,
+
+          image: image,
+
           image_size: "1024x1024",
         }),
       }
@@ -31,7 +46,11 @@ export async function POST(req: Request) {
 
     if (!response.ok) {
       return NextResponse.json({
-        error: data.message || data.error || "AI生成失败",
+        error:
+          data.message ||
+          data.error ||
+          "AI生成失败",
+
         raw: data,
       })
     }
