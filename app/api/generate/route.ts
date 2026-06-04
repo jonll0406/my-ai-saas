@@ -13,31 +13,48 @@ export async function POST(req: Request) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "Kwai-Kolors/Kolors",
-          prompt: `生成一张1:1电商主图，${style}风格，高清商品摄影，干净背景，商业质感，不要文字，不要水印`,
-          image_size: "1024x1024",
-          batch_size: 1,
+          model: "black-forest-labs/FLUX.1-schnell",
+
+          prompt: `
+生成一张高质量中国电商主图，
+风格：${style}，
+高级商品摄影，
+白色干净背景，
+真实光影，
+商业广告风，
+4K高清，
+不要文字，
+不要水印，
+适合淘宝京东拼多多主图
+          `,
+
+          width: 1024,
+          height: 1024,
         }),
       }
     )
 
     const data = await response.json()
 
+    console.log(data)
+
     if (!response.ok) {
       return NextResponse.json({
-        error: data.message || data.error || "AI生成失败",
+        error:
+          data.message ||
+          data.error ||
+          "AI生成失败",
       })
     }
 
     const image =
       data.images?.[0]?.url ||
       data.data?.[0]?.url ||
-      data.data?.[0]?.b64_json ||
       ""
 
     if (!image) {
       return NextResponse.json({
-        error: "生成成功但没有返回图片地址",
+        error: "没有返回图片",
         raw: data,
       })
     }
