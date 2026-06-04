@@ -14,9 +14,9 @@ export async function POST(req: Request) {
         },
 
         body: JSON.stringify({
-          model: "stabilityai/stable-diffusion-xl-base-1.0",
+          model: "Kolors",
 
-          prompt: `一张高端电商产品主图，
+          prompt: `生成一张高端电商产品主图，
           ${style}风格，
           白色背景，
           商业摄影，
@@ -27,6 +27,7 @@ export async function POST(req: Request) {
           不要水印`,
 
           image_size: "1024x1024",
+          batch_size: 1,
         }),
       }
     )
@@ -48,9 +49,17 @@ export async function POST(req: Request) {
       data.data?.[0]?.url ||
       ""
 
+    if (!image) {
+      return NextResponse.json({
+        error: "没有返回图片",
+        raw: data,
+      })
+    }
+
     return NextResponse.json({
       image,
     })
+
   } catch (error) {
     return NextResponse.json({
       error: "服务器错误",
