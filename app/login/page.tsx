@@ -1,12 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
 export default function LoginPage() {
-  const router = useRouter()
-
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isRegister, setIsRegister] = useState(false)
@@ -23,9 +20,6 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: undefined,
-      },
     })
 
     setLoading(false)
@@ -35,8 +29,8 @@ export default function LoginPage() {
       return
     }
 
-    localStorage.setItem("loggedIn", "true")
-    router.push("/")
+    alert("注册成功，请登录")
+    setIsRegister(false)
   }
 
   async function login() {
@@ -55,12 +49,12 @@ export default function LoginPage() {
     setLoading(false)
 
     if (error) {
-      alert("邮箱或密码错误")
+      alert(error.message)
       return
     }
 
     localStorage.setItem("loggedIn", "true")
-    router.push("/")
+    window.location.href = "/"
   }
 
   return (
@@ -91,7 +85,7 @@ export default function LoginPage() {
             <button
               onClick={register}
               disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-bold disabled:opacity-50"
+              className="w-full bg-green-600 py-3 rounded-lg text-white font-bold"
             >
               {loading ? "注册中..." : "确认注册"}
             </button>
@@ -108,14 +102,14 @@ export default function LoginPage() {
             <button
               onClick={login}
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-bold disabled:opacity-50"
+              className="w-full bg-blue-600 py-3 rounded-lg text-white font-bold"
             >
               {loading ? "登录中..." : "登录"}
             </button>
 
             <button
               onClick={() => setIsRegister(true)}
-              className="w-full mt-4 bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-bold"
+              className="w-full mt-4 bg-green-600 py-3 rounded-lg text-white font-bold"
             >
               注册账号
             </button>
