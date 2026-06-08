@@ -20,36 +20,23 @@ export default function LoginPage() {
 
     setLoading(true)
 
-    const { data: oldUser } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .single()
-
-    if (oldUser) {
-      alert("这个邮箱已经注册过了")
-      setLoading(false)
-      return
-    }
-
-    const { error } = await supabase.from("users").insert([
-      {
-        email,
-        password,
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: undefined,
       },
-    ])
+    })
 
     setLoading(false)
 
     if (error) {
-      alert("注册失败：" + error.message)
+      alert(error.message)
       return
     }
 
-    alert("注册成功，请登录")
-    setIsRegister(false)
-    setEmail("")
-    setPassword("")
+    localStorage.setItem("loggedIn", "true")
+    router.push("/")
   }
 
   async function login() {
@@ -60,23 +47,19 @@ export default function LoginPage() {
 
     setLoading(true)
 
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .eq("password", password)
-      .single()
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
     setLoading(false)
 
-    if (error || !data) {
+    if (error) {
       alert("邮箱或密码错误")
       return
     }
 
-    localStorage.setItem("isLogin", "true")
-    localStorage.setItem("userEmail", email)
-
+    localStorage.setItem("loggedIn", "true")
     router.push("/")
   }
 
@@ -92,7 +75,7 @@ export default function LoginPage() {
           placeholder="请输入邮箱"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 mb-4 rounded-lg bg-slate-800 text-white outline-none"
+          className="w-full p-3 mb-4 rounded-lg bg-slate-800 text-white"
         />
 
         <input
@@ -100,7 +83,7 @@ export default function LoginPage() {
           placeholder="请输入密码"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 mb-6 rounded-lg bg-slate-800 text-white outline-none"
+          className="w-full p-3 mb-6 rounded-lg bg-slate-800 text-white"
         />
 
         {isRegister ? (
@@ -115,7 +98,7 @@ export default function LoginPage() {
 
             <button
               onClick={() => setIsRegister(false)}
-              className="w-full mt-4 bg-slate-700 py-3 rounded-lg text-white font-bold"
+              className="w-full mt-4 bg-slate-700 py-3 rounded-lg text-white"
             >
               返回登录
             </button>
