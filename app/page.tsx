@@ -1,188 +1,127 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
 
-export default function HomePage() {
+export default function LoginPage() {
   const router = useRouter()
 
-  const [style, setStyle] = useState("现代简约")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [isRegister, setIsRegister] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [image, setImage] = useState("")
-  const [preview, setPreview] = useState("")
-  const [fileBase64, setFileBase64] = useState("")
 
-  useEffect(() => {
-    const loggedIn = localStorage.getItem("loggedIn")
-
-    if (!loggedIn) {
-      router.push("/login")
-    }
-  }, [])
-
-  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-
-    if (!file) return
-
-    setPreview(URL.createObjectURL(file))
-
-    const reader = new FileReader()
-
-    reader.onloadend = () => {
-      setFileBase64(reader.result as string)
-    }
-
-    reader.readAsDataURL(file)
-  }
-
-  async function generateImage() {
-    if (!fileBase64) {
-      alert("请先上传产品图片")
+  async function register() {
+    if (!email || !password) {
+      alert("请输入邮箱和密码")
       return
     }
 
-    try {
-      setLoading(true)
-      setImage("")
+    setLoading(true)
 
-      const response = await fetch("/api/generate", {
-        method: "POST",
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    })
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+    setLoading(false)
 
-        body: JSON.stringify({
-          style,
-          image: fileBase64,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.error) {
-        alert(data.error)
-        return
-      }
-
-      setImage(data.image)
-    } catch (error) {
-      alert("生成失败")
-    } finally {
-      setLoading(false)
+    if (error) {
+      alert(error.message)
+      return
     }
+
+    alert("注册成功，请登录")
+    setIsRegister(false)
   }
 
-  function logout() {
-    localStorage.removeItem("loggedIn")
-    router.push("/login")
+  async function login() {
+    if (!email || !password) {
+      alert("请输入邮箱和密码")
+      return
+    }
+
+    setLoading(true)
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    setLoading(false)
+
+    if (error) {
+      alert("邮箱或密码错误")
+      return
+    }
+
+    localStorage.setItem("loggedIn", "true")
+    router.push("/")
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="w-full max-w-md bg-slate-900 p-8 rounded-2xl shadow-xl">
+        <h1 className="text-3xl font-bold text-center text-blue-400 mb-8">
+          电商AI运营平台
+        </h1>
 
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold">
-            AI电商主图生成平台
-          </h1>
+        <input
+          type="email"
+          placeholder="请输入邮箱"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-3 mb-4 rounded-lg bg-slate-800 text-white"
+        />
 
-          <button
-            onClick={logout}
-            className="bg-red-600 px-4 py-2 rounded-xl"
-          >
-            退出登录
-          </button>
-        </div>
+        <input
+          type="password"
+          placeholder="请输入密码"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-3 mb-6 rounded-lg bg-slate-800 text-white"
+        />
 
-        <div className="bg-slate-900 rounded-2xl p-6">
-
-          <h2 className="text-xl font-bold mb-4">
-            上传产品图片
-          </h2>
-
-          <label className="block border-2 border-dashed border-slate-600 rounded-2xl p-10 text-center cursor-pointer mb-6">
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleUpload}
-              className="hidden"
-            />
-
-            {preview ? (
-              <img
-                src={preview}
-                alt=""
-                className="mx-auto max-h-72 rounded-xl bg-white"
-              />
-            ) : (
-              <span className="text-slate-400">
-                点击上传产品图片
-              </span>
-            )}
-          </label>
-
-          <h2 className="text-xl font-bold mb-4">
-            选择场景风格
-          </h2>
-
-          <div className="flex gap-3 flex-wrap mb-6">
-            {[
-              "现代简约",
-              "科技未来",
-              "温馨家居",
-              "高级轻奢",
-              "自然清新",
-              "专业棚拍",
-            ].map((item) => (
-              <button
-                key={item}
-                onClick={() => setStyle(item)}
-                className={`px-4 py-2 rounded-lg ${
-                  style === item
-                    ? "bg-blue-600"
-                    : "bg-slate-700"
-                }`}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={generateImage}
-            disabled={loading}
-            className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl font-bold disabled:opacity-50"
-          >
-            {loading
-              ? "AI换背景中..."
-              : "开始AI换背景"}
-          </button>
-        </div>
-
-        {image && (
-          <div className="mt-10">
-            <h2 className="text-2xl font-bold mb-4">
-              AI生成结果
-            </h2>
-
-            <img
-              src={image}
-              alt=""
-              className="rounded-2xl w-full max-w-xl bg-white"
-            />
-
-            <a
-              href={image}
-              target="_blank"
-              className="inline-block mt-4 bg-blue-600 px-5 py-3 rounded-xl font-bold"
+        {isRegister ? (
+          <>
+            <button
+              onClick={register}
+              disabled={loading}
+              className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-bold disabled:opacity-50"
             >
-              打开/下载图片
-            </a>
-          </div>
+              {loading ? "注册中..." : "确认注册"}
+            </button>
+
+            <button
+              onClick={() => setIsRegister(false)}
+              className="w-full mt-4 bg-slate-700 py-3 rounded-lg text-white"
+            >
+              返回登录
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={login}
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-bold disabled:opacity-50"
+            >
+              {loading ? "登录中..." : "登录"}
+            </button>
+
+            <button
+              onClick={() => setIsRegister(true)}
+              className="w-full mt-4 bg-green-600 hover:bg-green-700 py-3 rounded-lg text-white font-bold"
+            >
+              注册账号
+            </button>
+          </>
         )}
+
+        <p className="text-center text-slate-400 mt-6">
+          AI主图生成 · AI详情页生成 · AI视频脚本
+        </p>
       </div>
     </div>
   )
